@@ -33,7 +33,7 @@ class User {
   factory User.fromJson(Map<String, dynamic> json) {
     final data = json['data'] ?? json;
     return User(
-      id: data['id'] ?? '',
+      id: data['userId'] ?? '',
       name: data['name'] ?? '',
       email: data['email'] ?? '',
       role: data['role'] ?? '', // ✅ Safe fallback

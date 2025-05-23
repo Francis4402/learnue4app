@@ -24,6 +24,7 @@ class _ProfilePageState extends State<ProfilePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Text('id: ${user.id}'),
             Text('Email: ${user.email}'),
             Text('Name: ${user.name}'),
             Text('Role: ${user.role}'),

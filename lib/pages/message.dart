@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:learnue4app/pages/chat_page.dart';
 import 'package:learnue4app/services/auth_services.dart';
 import 'package:learnue4app/utils/user_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:get/get.dart';
 
 class Message extends StatefulWidget {
   const Message({super.key});
@@ -26,16 +28,16 @@ class _MessageState extends State<Message> {
 
     final fetchedUsers = await authService.getUserData(context);
 
-    final filtered = fetchedUsers.where((user) =>
-    user['role'] == 'admin' &&
-        user['email'] != userProvider.user.email).toList();
+    final filtered = fetchedUsers
+        .where((user) =>
+          user['role'] == 'admin' && user['email'] != userProvider.user.email)
+        .toList();
 
     setState(() {
       users = filtered;
       isLoading = false;
     });
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -48,34 +50,38 @@ class _MessageState extends State<Message> {
       ),
       body: !isLoggedIn
           ? const Center(
-        child: Text(
-          "You're not logged in",
-          style: TextStyle(fontSize: 18),
-        ),
-      )
+              child: Text(
+                "You're not logged in",
+                style: TextStyle(fontSize: 18),
+              ),
+            )
           : isLoading
-          ? const Center(
-        child: CircularProgressIndicator(),
-      )
-          : users.isEmpty
-          ? const Center(
-        child: Text("No users found"),
-      )
-          : ListView.builder(
-        itemCount: users.length,
-        itemBuilder: (context, index) {
-          final user = users[index];
-          return ListTile(
-            leading: const CircleAvatar(
-              child: Icon(Icons.person),
-            ),
-            title: Text(user['name'] ?? 'No Name'),
-            subtitle: Text(user['email'] ?? 'No Email'),
-            onTap: () {},
-          );
-        },
-      ),
+              ? const Center(
+                  child: CircularProgressIndicator(),
+                )
+              : users.isEmpty
+                  ? const Center(
+                      child: Text("No users found"),
+                    )
+                  : ListView.builder(
+                      itemCount: users.length,
+                      itemBuilder: (context, index) {
+                        final user = users[index];
+
+                        return ListTile(
+                          leading: const CircleAvatar(
+                            child: Icon(Icons.person),
+                          ),
+                          title: Text(user['name'] ?? 'No Name'),
+                          subtitle: Text(user['email'] ?? 'No Email'),
+                          onTap: () {
+                            Get.to(() => ChatScreen(
+                                currentUser: userProvider.user,
+                                otherUser: user));
+                          },
+                        );
+                      },
+                    ),
     );
   }
 }
-

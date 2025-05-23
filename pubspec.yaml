@@ -46,6 +46,7 @@ dependencies:
   url_launcher: ^6.3.1
   jwt_decoder: ^2.0.1
   provider: ^6.1.5
+  socket_io_client: ^3.1.2
 
 dev_dependencies:
   flutter_test:
