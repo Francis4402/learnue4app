@@ -27,15 +27,16 @@ class AuthService {
         name: name,
         password: password,
         email: email,
-        accessToken: '', role: '',
+        role: '',
+        accessToken: ''
       );
 
-      http.Response res = await http.post(
+      final res = await http.post(
         Uri.parse('${Constants.uri}/api/auth/register'),
-        body: jsonEncode(user.toJson()), // ✅ Ensure proper JSON encoding
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },
+        body: jsonEncode(user.toMap()),
       );
 
       print('Status Code: ${res.statusCode}');

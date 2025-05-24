@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 class User {
-  final String id;
+  final String? id;
   final String name;
   final String email;
   final String role;
@@ -9,7 +9,7 @@ class User {
   final String password;
 
   User({
-    required this.id,
+    this.id,
     required this.name,
     required this.email,
     required this.role,
@@ -20,11 +20,8 @@ class User {
   // Convert User to a Map
   Map<String, dynamic> toMap() {
     return {
-      'id': id,
       'name': name,
       'email': email,
-      'role': role,
-      'accessToken': accessToken,
       'password': password,
     };
   }
@@ -33,15 +30,25 @@ class User {
   factory User.fromJson(Map<String, dynamic> json) {
     final data = json['data'] ?? json;
     return User(
-      id: data['userId'] ?? '',
+      id: data['userId'] ?? data['id'] ?? '',
       name: data['name'] ?? '',
       email: data['email'] ?? '',
-      role: data['role'] ?? '', // ✅ Safe fallback
+      role: data['role'] ?? '',
       accessToken: data['accessToken'] ?? '',
-      password: '', // ✅ Not returned from API
+      password: '',
     );
   }
 
   // Convert User to JSON string
-  String toJson() => json.encode(toMap());
+  String fullJson() => json.encode({
+    'id': id,
+    'name': name,
+    'email': email,
+    'role': role,
+    'accessToken': accessToken,
+    'password': '',
+  });
+
+  factory User.fromFullJson(String source) =>
+      User.fromJson(json.decode(source));
 }

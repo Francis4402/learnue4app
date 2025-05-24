@@ -33,13 +33,13 @@ class _ChatScreenState extends State<ChatScreen> {
 
     // Connect to socket and handle incoming messages
     socketService.connectSocket(
-      widget.currentUser.id,
+      widget.currentUser.id!,
           (data) {
         setState(() {
           messages.add(data);
         });
       },
-      userId: widget.currentUser.id,
+      userId: widget.currentUser.id!,
       otherUserId: widget.otherUser['_id'],
       onMessageReceived: (data) {
         setState(() {
@@ -54,7 +54,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
     // Join room
     final roomId = socketService.generateRoomId(
-      widget.currentUser.id,
+      widget.currentUser.id!,
       widget.otherUser['_id'],
     );
     socketService.socket.emit('joinRoom', roomId);
@@ -113,7 +113,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
     // Emit message via socket
     socketService.sendMessage(
-      senderId: widget.currentUser.id,
+      senderId: widget.currentUser.id!,
       receiverId: widget.otherUser['_id'],
       message: text,
     );
@@ -156,19 +156,31 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(10),
             child: Row(
               children: [
                 Expanded(
                   child: TextField(
                     controller: _messageController,
-                    decoration:
-                    const InputDecoration(hintText: 'Type a message...'),
+                    decoration: const InputDecoration(
+                      hintText: 'Type a message...',
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 16),
+                    ),
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.send),
+                const SizedBox(width: 8),
+                OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.all(20),
+                    side: const BorderSide(color: Colors.grey),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    backgroundColor: Colors.blueGrey
+                  ),
                   onPressed: sendMessage,
+                  child: const Icon(Icons.send, color: Colors.blue),
                 ),
               ],
             ),

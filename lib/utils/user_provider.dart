@@ -17,7 +17,8 @@ class UserProvider extends ChangeNotifier {
   void setUserFromModel(User user) async {
     _user = user;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('user', jsonEncode(user.toMap())); // Save for persistence
+    await prefs.setString('user', user.fullJson()); // ✅ full details
+    await prefs.setString('x-auth-token', user.accessToken); // optional
     notifyListeners();
   }
 
@@ -25,8 +26,7 @@ class UserProvider extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     final userJson = prefs.getString('user');
     if (userJson != null) {
-      final userMap = jsonDecode(userJson);
-      _user = User.fromJson(userMap);
+      _user = User.fromFullJson(userJson);
       notifyListeners();
     }
   }

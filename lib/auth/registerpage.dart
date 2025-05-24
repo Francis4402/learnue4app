@@ -4,8 +4,6 @@ import 'package:learnue4app/services/auth_services.dart';
 
 
 class RegisterPage extends StatefulWidget {
-
-
   const RegisterPage({super.key});
 
   @override
@@ -19,7 +17,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController passwordController = TextEditingController();
   final AuthService authService = AuthService();
 
-  void signupUser(BuildContext context) {
+  void signupUser() {
     if (_formKey.currentState!.validate()) {
       authService.signUpUser(
         email: emailController.text.trim(),
@@ -98,7 +96,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 const SizedBox(height: 30),
                 ElevatedButton(
-                  onPressed: () => signupUser(context),
+                  onPressed: () => signupUser(),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
