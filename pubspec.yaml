@@ -49,6 +49,7 @@ dependencies:
   socket_io_client: ^3.1.2
   image_picker: ^1.1.2
   file_picker: ^10.1.9
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:

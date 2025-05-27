@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:jwt_decoder/jwt_decoder.dart';
-import 'package:learnue4app/models/user.dart';
+import 'package:learnue4app/models/user_model.dart';
 import 'package:learnue4app/pages/profilepage.dart';
 import 'package:learnue4app/services/bottom_navbar.dart';
 import 'package:learnue4app/utils/key.dart';

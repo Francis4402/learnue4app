@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:learnue4app/models/user.dart';
+import 'package:learnue4app/models/user_model.dart';
 
 class UserProvider extends ChangeNotifier {
   User _user = User(id: '', name: '', email: '', accessToken: '', password: '', role: '');

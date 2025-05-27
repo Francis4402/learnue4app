@@ -9,6 +9,7 @@ class ChatSocketService {
         required String userId,
         required String otherUserId,
         required Function(dynamic data) onMessageReceived,
+        required Function(String messageId) onMessageDeleted,
       }) {
     socket = IO.io(Constants.uri, <String, dynamic>{
       'transports': ['websocket'],
@@ -27,7 +28,11 @@ class ChatSocketService {
       print('📥 New message: ${data['message']}');
       onMessageReceived(data);
     });
-    
+
+    socket.on('messageDeleted', (data) {
+      print('🗑️ Message deleted: ${data['_id']}');
+      onMessageDeleted(data['_id'].toString());
+    });
 
     socket.onDisconnect((_) {
       print('❌ Socket disconnected');
@@ -41,7 +46,10 @@ class ChatSocketService {
   void sendMessage({
     required String senderId,
     required String receiverId,
-    required String message,
+    String? message,
+    String? image,
+    String? file,
+    String? fileName,
   }) {
     final roomId = generateRoomId(senderId, receiverId);
     socket.emit('sendMessage', {
@@ -49,6 +57,17 @@ class ChatSocketService {
       'senderId': senderId,
       'receiverId': receiverId,
       'message': message,
+      'image': image,
+      'file': file,
+      'fileName': fileName,
+    });
+  }
+
+  void deleteMessage(String messageId, String roomId, String senderId) {
+    socket.emit('deleteMessage', {
+      '_id': messageId,
+      'roomId': roomId,
+      'senderId': senderId,
     });
   }
 
