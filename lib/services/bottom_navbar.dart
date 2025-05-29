@@ -4,8 +4,8 @@ import 'package:learnue4app/app.dart';
 import 'package:learnue4app/auth/loginpage.dart';
 import 'package:learnue4app/auth/registerpage.dart';
 import 'package:learnue4app/controller/bottom_navbar_controller.dart';
+import 'package:learnue4app/pages/dashboard.dart';
 import 'package:learnue4app/pages/message.dart';
-import 'package:learnue4app/pages/profilepage.dart';
 import 'package:learnue4app/services/auth_services.dart';
 import 'package:learnue4app/utils/app_colors.dart';
 import 'package:learnue4app/utils/user_provider.dart';
@@ -107,10 +107,10 @@ class _MainBottomNavbarScreenState extends State<MainBottomNavbarScreen> {
                       if (isLoggedIn) ...[
                         ListTile(
                           leading: const Icon(Icons.person),
-                          title: const Text('Your Profile'),
+                          title: const Text('Dashboard'),
                           onTap: () {
                             Get.to(
-                              const ProfilePage(),
+                              const Dashboard(),
                               transition: Transition.circularReveal,
                               duration: const Duration(milliseconds: 1000),
                             );

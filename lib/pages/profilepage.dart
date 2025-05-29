@@ -18,25 +18,36 @@ class _ProfilePageState extends State<ProfilePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Profile'),
+        title: const Text('My Profile'), centerTitle: true,
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('id: ${user.id}'),
-            Text('Email: ${user.email}'),
-            Text('Name: ${user.name}'),
-            Text('Role: ${user.role}'),
-            Text('Token: ${user.accessToken}'),
-            ElevatedButton(
-                onPressed: () {
-                  Get.to(const MainBottomNavbarScreen());
-                },
-                child: const Text('Home Page'))
-          ],
+      body: SingleChildScrollView(
+        child: Center(
+          child: Column(
+            children: [
+              const SizedBox(height: 40),
+              const CircleAvatar(
+                radius: 60,
+                backgroundColor: Colors.black26,
+                child: Icon(Icons.person, size: 50, color: Colors.white)
+              ),
+
+              const SizedBox(height: 50),
+
+              Text('Name : ${user.name}'),
+
+              const SizedBox(height: 20),
+
+              Text('Email: ${user.email}'),
+
+              const SizedBox(height: 20),
+
+              ElevatedButton(onPressed: () {
+                Get.offAll(() => const MainBottomNavbarScreen());
+              }, child: const Text('HomePage'))
+            ],
+          ),
         ),
-      ),
+      )
     );
   }
 }

@@ -150,14 +150,14 @@ class AuthService {
       if (res.statusCode == 200) {
         final List<dynamic> data = jsonDecode(res.body)['data'];
         print('Fetched ${data.length} users');
-        return data; // ✅ Return the list
+        return data;
       } else {
         print('Failed to load users: ${res.statusCode}');
-        return []; // ✅ Return empty list on failure
+        return [];
       }
     } catch (e) {
       print('Error fetching users: $e');
-      return []; // ✅ Return empty list on error
+      return [];
     }
   }
 

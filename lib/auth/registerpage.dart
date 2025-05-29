@@ -41,7 +41,7 @@ class _RegisterPageState extends State<RegisterPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                TextField(
+                TextFormField(
                   controller: nameController,
                   decoration: InputDecoration(
                       labelText: 'Name',
@@ -54,11 +54,17 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                       prefixIcon: const Icon(Icons.person, color: Colors.white70)),
                   style: const TextStyle(color: Colors.white),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter Your Name';
+                    }
+                    return null;
+                  },
                 ),
 
                 const SizedBox(height: 20),
 
-                TextField(
+                TextFormField(
                   controller: emailController,
                   decoration: InputDecoration(
                       labelText: 'Email',
@@ -71,11 +77,17 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                       prefixIcon: const Icon(Icons.email, color: Colors.white70)),
                   style: const TextStyle(color: Colors.white),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter Email';
+                    }
+                    return null;
+                  },
                 ),
 
                 const SizedBox(height: 20),
 
-                TextField(
+                TextFormField(
                   controller: passwordController,
                   decoration: InputDecoration(
                     labelText: 'Password',
@@ -93,6 +105,12 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                   obscureText: true,
                   style: const TextStyle(color: Colors.white),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter password';
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 30),
                 ElevatedButton(

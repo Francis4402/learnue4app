@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:convert';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +8,11 @@ import 'package:learnue4app/models/user_model.dart';
 import 'package:learnue4app/utils/key.dart';
 import 'package:learnue4app/models/soketiomodel.dart';
 import 'package:intl/intl.dart';
+import 'dart:typed_data';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:open_file/open_file.dart';
+
 
 class ChatScreen extends StatefulWidget {
   final User currentUser;
@@ -34,7 +40,6 @@ class _ChatScreenState extends State<ChatScreen> {
     super.initState();
     socketService = ChatSocketService();
 
-    // Connect to socket and handle incoming messages
     socketService.connectSocket(
       widget.currentUser.id!,
       (data) {
@@ -84,6 +89,40 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
+  Future<void> _downloadFile({
+    required Uint8List bytes,
+    required String fileName,
+  }) async {
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final isMounted = mounted;
+
+    final status = await Permission.storage.request();
+    if (!status.isGranted) {
+      if (isMounted) {
+        scaffoldMessenger.showSnackBar(
+          const SnackBar(content: Text('Storage permission denied')),
+        );
+      }
+      return;
+    }
+
+    final dir = await getExternalStorageDirectory();
+    if (dir == null) return;
+
+    final filePath = '${dir.path}/$fileName';
+    final file = File(filePath);
+    await file.writeAsBytes(bytes);
+
+    if (isMounted) {
+      scaffoldMessenger.showSnackBar(
+        SnackBar(content: Text('Saved to $filePath')),
+      );
+    }
+
+    await OpenFile.open(filePath);
+  }
+
+
   Future<void> loadMessages() async {
     final user1 = widget.currentUser.id;
     final user2 = widget.otherUser['_id'];
@@ -111,7 +150,6 @@ class _ChatScreenState extends State<ChatScreen> {
       'message': text,
       'createdAt': DateTime.now().toIso8601String(),
     };
-
 
     setState(() {
       messages.add(newMessage);
@@ -189,8 +227,9 @@ class _ChatScreenState extends State<ChatScreen> {
   String getFormattedTime(dynamic createdAt) {
     try {
       if (createdAt == null) return '';
-      final dateTime = createdAt is String ?
-      DateTime.parse(createdAt) : DateTime.fromMillisecondsSinceEpoch(createdAt);
+      final dateTime = createdAt is String
+          ? DateTime.parse(createdAt)
+          : DateTime.fromMillisecondsSinceEpoch(createdAt);
       return DateFormat('hh:mm a').format(dateTime);
     } catch (e) {
       return '';
@@ -202,22 +241,25 @@ class _ChatScreenState extends State<ChatScreen> {
 
     Widget content;
 
-    if (msg.containsKey('image') &&
-        msg['image'] != null &&
-        msg['image'] is String) {
+    if (msg.containsKey('image') && msg['image'] != null && msg['image'] is String) {
       try {
         final bytes = base64Decode(msg['image']);
         content = Column(
-          crossAxisAlignment:
-              isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
           children: [
-            Image.memory(bytes, width: 200),
+            GestureDetector(
+              onTap: () => _downloadFile(
+                bytes: bytes,
+                fileName: 'image_${DateTime.now().millisecondsSinceEpoch}.jpg',
+              ),
+              child: Image.memory(bytes, width: 200),
+            ),
             const SizedBox(height: 4),
-            Text(timeString,
-                style: const TextStyle(fontSize: 10, color: Colors.black)),
+            Text(timeString, style: const TextStyle(fontSize: 10, color: Colors.black)),
+            const Text('Tap image to download', style: TextStyle(fontSize: 10, color: Colors.grey)),
           ],
         );
-      } catch (e) {
+      } catch (_) {
         content = const Text("⚠️ Failed to load image.");
       }
     } else if (msg.containsKey('file') &&
@@ -225,32 +267,34 @@ class _ChatScreenState extends State<ChatScreen> {
         msg['file'] is String &&
         msg.containsKey('fileName') &&
         msg['fileName'] != null) {
+      try {
+        final bytes = base64Decode(msg['file']);
+        content = Column(
+          crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          children: [
+            GestureDetector(
+              onTap: () => _downloadFile(bytes: bytes, fileName: msg['fileName']),
+              child: const Icon(Icons.insert_drive_file, size: 40, color: Colors.blueAccent),
+            ),
+            Text(msg['fileName'], style: const TextStyle(fontSize: 14, color: Colors.black)),
+            const Text('Tap to download', style: TextStyle(fontSize: 10, color: Colors.grey)),
+            const SizedBox(height: 4),
+            Text(timeString, style: const TextStyle(fontSize: 10, color: Colors.black)),
+          ],
+        );
+      } catch (_) {
+        content = const Text("⚠️ Failed to load file.");
+      }
+    } else if (msg.containsKey('message') && msg['message'] != null && msg['message'] is String) {
       content = Column(
-        crossAxisAlignment:
-            isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-        children: [
-          const Icon(Icons.insert_drive_file, size: 40),
-          Text(msg['fileName'] ?? '',
-              style: const TextStyle(fontSize: 14, color: Colors.black)),
-          const SizedBox(height: 4),
-          Text(timeString,
-              style: const TextStyle(fontSize: 10, color: Colors.black)),
-        ],
-      );
-    } else if (msg.containsKey('message') &&
-        msg['message'] != null &&
-        msg['message'] is String) {
-      content = Column(
-        crossAxisAlignment:
-            isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         children: [
           Text(
             msg['message'],
             style: const TextStyle(color: Colors.black, fontSize: 16),
           ),
           const SizedBox(height: 4),
-          Text(timeString,
-              style: const TextStyle(fontSize: 10, color: Colors.black)),
+          Text(timeString, style: const TextStyle(fontSize: 10, color: Colors.black)),
         ],
       );
     } else {
@@ -262,6 +306,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
     return content;
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -281,34 +326,54 @@ class _ChatScreenState extends State<ChatScreen> {
                 final isMe = msg['senderId'] == widget.currentUser.id;
 
                 return GestureDetector(
-                  onLongPress: isMe
-                      ? () {
-                          final roomId = socketService.generateRoomId(
-                              widget.currentUser.id!, widget.otherUser['_id']);
 
-                          showDialog(
-                              context: context,
-                              builder: (_) => AlertDialog(
-                                    title: const Text('Delete Message?'),
-                                    content: const Text(
-                                        'Do you want to delete this message?'),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.pop(context);
-                                          socketService.deleteMessage(msg['_id'], roomId, widget.currentUser.id!);
-                                        },
-                                        child: const Text(
-                                          'Delete',
-                                          style: TextStyle(color: Colors.red),
-                                        ),
-                                      ),
-                                      TextButton(
-                                        onPressed: () => Navigator.pop(context),
-                                        child: const Text('Cancel'),
-                                      ),
-                                    ],
-                                  ));
+                  onLongPress: isMe
+                      ? () async {
+                          final messageId = msg['_id']?.toString();
+                          if (messageId == null || messageId.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                                content: Text(
+                                    'Cannot delete message - invalid ID')));
+                            return;
+                          }
+
+                          final confirmed = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Delete Message?'),
+                              content: const Text(
+                                  'This will permanently remove the message'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.pop(context, false),
+                                  child: const Text('Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, true),
+                                  child: const Text('Delete',
+                                      style: TextStyle(color: Colors.red)),
+                                )
+                              ],
+                            ),
+                          );
+
+                          if (confirmed == true) {
+                            final roomId = socketService.generateRoomId(
+                              widget.currentUser.id!,
+                              widget.otherUser['_id'],
+                            );
+
+                            // Optimistic UI update
+                            setState(() {
+                              messages
+                                  .removeWhere((m) => m['_id'] == messageId);
+                            });
+
+                            // Send deletion request
+                            socketService.deleteMessage(
+                                messageId, roomId, widget.currentUser.id!);
+                          }
                         }
                       : null,
                   child: Align(

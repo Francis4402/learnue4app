@@ -40,7 +40,7 @@ class _LoginPageState extends State<LoginPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  TextField(
+                  TextFormField(
                     controller: emailController,
                     decoration: InputDecoration(
                         labelText: 'Email',
@@ -54,11 +54,17 @@ class _LoginPageState extends State<LoginPage> {
                         prefixIcon:
                         const Icon(Icons.email, color: Colors.white70)),
                     style: const TextStyle(color: Colors.white),
+                    validator: (value) {
+                      if(value == null || value.isEmpty) {
+                        return 'Please Enter Your Email';
+                      }
+                      return null;
+                    },
                   ),
         
                   const SizedBox(height: 20),
         
-                  TextField(
+                  TextFormField(
                     controller: passwordController,
                     decoration: InputDecoration(
                       labelText: 'Password',
@@ -76,6 +82,12 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     obscureText: true,
                     style: const TextStyle(color: Colors.white),
+                    validator: (value) {
+                      if(value == null || value.isEmpty) {
+                        return 'Please Enter your password';
+                      }
+                      return null;
+                    },
                   ),
         
                   const SizedBox(height: 30),

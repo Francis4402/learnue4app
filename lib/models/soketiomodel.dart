@@ -64,8 +64,14 @@ class ChatSocketService {
   }
 
   void deleteMessage(String messageId, String roomId, String senderId) {
+    if (messageId.isEmpty) {
+      print('Cannot delete message - empty ID');
+      return;
+    }
+
+    print('Attempting to delete message $messageId');
     socket.emit('deleteMessage', {
-      '_id': messageId,
+      'id': messageId,
       'roomId': roomId,
       'senderId': senderId,
     });
