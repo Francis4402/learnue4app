@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:get/get.dart';
 
 class UploadProjects extends StatefulWidget {
   const UploadProjects({super.key});
@@ -116,22 +117,22 @@ class _UploadProjectsState extends State<UploadProjects> {
                         ),
                         child: _selectedImage == null
                             ? const Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.add_a_photo,
-                                color: Colors.white70, size: 40),
-                            SizedBox(height: 8),
-                            Text('Tap to select image',
-                                style: TextStyle(color: Colors.white70)),
-                          ],
-                        )
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.add_a_photo,
+                                      color: Colors.white70, size: 40),
+                                  SizedBox(height: 8),
+                                  Text('Tap to select image',
+                                      style: TextStyle(color: Colors.white70)),
+                                ],
+                              )
                             : ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: Image.file(
-                            _selectedImage!,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
+                                borderRadius: BorderRadius.circular(10),
+                                child: Image.file(
+                                  _selectedImage!,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
                       ),
                     ),
                   ],
@@ -142,17 +143,21 @@ class _UploadProjectsState extends State<UploadProjects> {
                 // Submit Button
                 ElevatedButton(
                   onPressed: () {
-                    if (_formKey.currentState!.validate() && _selectedImage != null) {
+                    if (_formKey.currentState!.validate() &&
+                        _selectedImage != null) {
                       // Handle form submission
                       _uploadProject();
                     } else if (_selectedImage == null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Please select an image')),
+                      Get.snackbar('Upload', 'Please Select An Image',
+                          snackPosition: SnackPosition.TOP,
+                          backgroundColor: Colors.black45,
+                          colorText: Colors.white
                       );
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 40, vertical: 15),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
                     ),
@@ -168,34 +173,22 @@ class _UploadProjectsState extends State<UploadProjects> {
   }
 
   Future<void> _uploadProject() async {
-    // Implement your project upload logic here
-    // You would typically:
-    // 1. Upload the image to storage
-    // 2. Save project data with image URL to database
-    // 3. Show success/error message
-    // 4. Navigate back or reset form
-
-    // Example structure:
     try {
-      // final imageUrl = await uploadImageToStorage(_selectedImage!);
-      // await saveProjectData(
-      //   title: titleController.text,
-      //   url: projectUrl.text,
-      //   imageUrl: imageUrl,
-      // );
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Project uploaded successfully!')),
+      Get.snackbar('Upload', 'Project uploaded successfully!',
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.black45,
+          colorText: Colors.white
       );
 
       // Clear form
       titleController.clear();
       projectUrl.clear();
       setState(() => _selectedImage = null);
-
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error uploading project: $e')),
+      Get.snackbar('Upload', 'Error Upload $e',
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.black45,
+          colorText: Colors.white
       );
     }
   }
