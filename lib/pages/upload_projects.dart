@@ -1,8 +1,9 @@
-
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
+import 'package:learnue4app/pages/dashboard.dart';
 import 'package:learnue4app/services/upload_project_services.dart';
+import 'package:get/get.dart';
 
 class UploadProjects extends StatefulWidget {
   const UploadProjects({super.key});
@@ -43,8 +44,22 @@ class _UploadProjectsState extends State<UploadProjects> {
         title: title,
         downloadUrl: url,
         images: _selectedImage!,
-      );
+      ).then((_) {
+        _clearForm();
+        Get.off(() => const Dashboard());
+      });
     }
+  }
+
+  void _clearForm() {
+    titleController.clear();
+    projectUrlController.clear();
+
+    setState(() {
+      _selectedImage = null;
+    });
+
+    _formKey.currentState?.reset();
   }
 
   @override
