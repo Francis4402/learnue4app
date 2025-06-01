@@ -1,7 +1,8 @@
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import 'package:get/get.dart';
+import 'package:learnue4app/services/upload_project_services.dart';
 
 class UploadProjects extends StatefulWidget {
   const UploadProjects({super.key});
@@ -13,7 +14,8 @@ class UploadProjects extends StatefulWidget {
 class _UploadProjectsState extends State<UploadProjects> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController titleController = TextEditingController();
-  final TextEditingController projectUrl = TextEditingController();
+  final TextEditingController projectUrlController = TextEditingController();
+  final UploadService uploadService = UploadService();
   File? _selectedImage;
 
   Future<void> _pickImage() async {
@@ -31,6 +33,20 @@ class _UploadProjectsState extends State<UploadProjects> {
     }
   }
 
+  void _uploadProject() {
+    if (_formKey.currentState!.validate()) {
+      String title = titleController.text.trim();
+      String url = projectUrlController.text.trim();
+
+      uploadService.uploadProject(
+        context: context,
+        title: title,
+        downloadUrl: url,
+        images: _selectedImage!,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -43,7 +59,6 @@ class _UploadProjectsState extends State<UploadProjects> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Project Title Field
                 TextFormField(
                   controller: titleController,
                   decoration: InputDecoration(
@@ -70,7 +85,7 @@ class _UploadProjectsState extends State<UploadProjects> {
 
                 // Project URL Field
                 TextFormField(
-                  controller: projectUrl,
+                  controller: projectUrlController,
                   decoration: InputDecoration(
                     labelText: 'Project URL',
                     labelStyle: const TextStyle(color: Colors.white70),
@@ -143,17 +158,7 @@ class _UploadProjectsState extends State<UploadProjects> {
                 // Submit Button
                 ElevatedButton(
                   onPressed: () {
-                    if (_formKey.currentState!.validate() &&
-                        _selectedImage != null) {
-                      // Handle form submission
-                      _uploadProject();
-                    } else if (_selectedImage == null) {
-                      Get.snackbar('Upload', 'Please Select An Image',
-                          snackPosition: SnackPosition.TOP,
-                          backgroundColor: Colors.black45,
-                          colorText: Colors.white
-                      );
-                    }
+                    _uploadProject();
                   },
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
@@ -172,31 +177,6 @@ class _UploadProjectsState extends State<UploadProjects> {
     );
   }
 
-  Future<void> _uploadProject() async {
-    try {
-      Get.snackbar('Upload', 'Project uploaded successfully!',
-          snackPosition: SnackPosition.TOP,
-          backgroundColor: Colors.black45,
-          colorText: Colors.white
-      );
 
-      // Clear form
-      titleController.clear();
-      projectUrl.clear();
-      setState(() => _selectedImage = null);
-    } catch (e) {
-      Get.snackbar('Upload', 'Error Upload $e',
-          snackPosition: SnackPosition.TOP,
-          backgroundColor: Colors.black45,
-          colorText: Colors.white
-      );
-    }
-  }
 
-  @override
-  void dispose() {
-    titleController.dispose();
-    projectUrl.dispose();
-    super.dispose();
-  }
 }

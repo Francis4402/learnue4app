@@ -1,42 +1,37 @@
-
-
 class UploadModel {
-  String? sId;
+  String? id;
   String? title;
   String? downloadUrl;
-  List<String>? imageUrls;
+  List<String>? images;
   String? createdAt;
   String? updatedAt;
-  int? iV;
 
-  UploadModel(
-      {this.sId,
-        this.title,
-        this.downloadUrl,
-        this.imageUrls,
-        this.createdAt,
-        this.updatedAt,
-        this.iV});
+  UploadModel({
+    this.id,
+    this.title,
+    this.downloadUrl,
+    this.images,
+    this.createdAt,
+    this.updatedAt,
+  });
 
   UploadModel.fromJson(Map<String, dynamic> json) {
-    sId = json['_id'];
+    id = json['_id'];
     title = json['title'];
     downloadUrl = json['downloadUrl'];
-    imageUrls = json['imageUrls'].cast<String>();
+    images = json['images'] != null ? List<String>.from(json['images']) : null;
     createdAt = json['createdAt'];
     updatedAt = json['updatedAt'];
-    iV = json['__v'];
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
-    data['_id'] = sId;
+    data['_id'] = id;
     data['title'] = title;
     data['downloadUrl'] = downloadUrl;
-    data['imageUrls'] = imageUrls;
+    data['images'] = images;
     data['createdAt'] = createdAt;
     data['updatedAt'] = updatedAt;
-    data['__v'] = iV;
     return data;
   }
 }

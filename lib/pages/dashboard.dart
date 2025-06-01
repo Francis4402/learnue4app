@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:learnue4app/pages/upload_projects.dart';
 import 'package:learnue4app/services/auth_services.dart';
 import 'package:get/get.dart';
+import 'package:learnue4app/services/upload_project_services.dart';
 
 class Dashboard extends StatefulWidget {
   const Dashboard({super.key});
@@ -12,12 +13,27 @@ class Dashboard extends StatefulWidget {
 
 class _DashboardState extends State<Dashboard> {
   List<dynamic> users = [];
+  List<dynamic> projects = [];
   bool isLoading = true;
 
   @override
   void initState() {
     loadUsers();
+    loadProjects();
     super.initState();
+  }
+
+  Future<void> loadProjects() async {
+    final uploadService = UploadService();
+
+    final fetchProjects = await uploadService.getProjects(context: context);
+
+    print(fetchProjects);
+
+    setState(() {
+      projects = fetchProjects;
+      isLoading = false;
+    });
   }
 
   void loadUsers() async {
@@ -43,7 +59,9 @@ class _DashboardState extends State<Dashboard> {
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Stat cards at the top
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
@@ -58,11 +76,63 @@ class _DashboardState extends State<Dashboard> {
                     _buildStatCard(
                       icon: Icons.folder,
                       title: 'Total Projects',
-                      value: users.length.toString(),
+                      value: projects.length.toString(),
                       color: Colors.green,
                     ),
                   ],
                 ),
+              ),
+              const SizedBox(height: 20),
+
+              // Heading for Projects
+              const Text(
+                'Uploaded Projects',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 10),
+
+              // List of projects
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: projects.length,
+                itemBuilder: (context, index) {
+                  final project = projects[index];
+                  final title = project['title'] ?? 'No Title';
+                  final downloadUrl = project['downloadUrl'] ?? 'No url';
+                  final imageUrls = (project['imageUrls'] as List<dynamic>?)
+                      ?.map((e) => e.toString())
+                      .toList() ??
+                      [];
+
+                  final firstImage = imageUrls.isNotEmpty ? imageUrls.first : null;
+
+                  return Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(10.0),
+                      child: ListTile(
+                        leading: firstImage != null
+                            ? SizedBox(
+                          width: 80,
+                          height: 80,
+                          child: Image.network(
+                            firstImage,
+                            fit: BoxFit.cover,
+                          ),
+                        )
+                            : const Icon(Icons.image_not_supported),
+                        title: Text(title),
+                        subtitle: Text(downloadUrl),
+                        trailing: Wrap(
+                          children: [
+                            IconButton(onPressed: (){}, icon: const Icon(Icons.delete_forever_outlined)),
+                            IconButton(onPressed: (){}, icon: const Icon(Icons.edit)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ],
           ),
@@ -71,7 +141,7 @@ class _DashboardState extends State<Dashboard> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Get.to(
-                () => const UploadProjects(),
+            () => const UploadProjects(),
             transition: Transition.circularReveal,
             duration: const Duration(milliseconds: 1000),
           );
