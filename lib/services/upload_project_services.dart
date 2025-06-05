@@ -1,7 +1,5 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:http/http.dart' as http;
-import 'package:learnue4app/pages/dashboard.dart';
 import 'package:learnue4app/utils/key.dart';
 import 'package:learnue4app/utils/user_provider.dart';
 import 'package:get/get.dart';
@@ -14,7 +12,7 @@ class UploadService {
     required context,
     required String title,
     required String downloadUrl,
-    required File? images,
+    required String imageUrls,
   }) async {
     try {
       var userProvider = Provider.of<UserProvider>(context, listen: false);
@@ -30,37 +28,24 @@ class UploadService {
         return;
       }
 
-      // Create multipart request
-      var request = http.MultipartRequest(
-        'POST',
-        Uri.parse('${Constants.uri}/api/posts'),
-      );
-
-      // Add headers
-      request.headers['x-auth-token'] = userProvider.user.accessToken;
-
-      // Add fields
-      request.fields['title'] = title;
-      request.fields['downloadUrl'] = downloadUrl;
-
-      // Add image file if exists
-      if (images != null) {
-        var fileStream = http.ByteStream(images.openRead());
-        var length = await images.length();
-
-        var multipartFile = http.MultipartFile(
-          'images',
-          fileStream,
-          length,
-          filename: images.path.split('/').last,
-        );
-
-        request.files.add(multipartFile);
+      if (imageUrls.isEmpty) {
+        throw Exception('Please provide at least one image URL');
       }
 
-      // Send the request
-      var streamedResponse = await request.send();
-      var response = await http.Response.fromStream(streamedResponse);
+
+      final response = await http.post(
+        Uri.parse('${Constants.uri}/api/posts'),
+        headers: {
+          'Content-Type': 'application/json',
+          'x-auth-token': userProvider.user.accessToken,
+        },
+        body: jsonEncode({
+          'title': title,
+          'downloadUrl': downloadUrl,
+          'imageUrls': imageUrls,
+        }),
+      );
+
 
       httpErrorHandle(
         response: response,
@@ -68,7 +53,120 @@ class UploadService {
         onSuccess: () {
           Get.snackbar(
             "Success",
-            "Upload Successful",
+            "Project Uploaded successfully",
+            snackPosition: SnackPosition.TOP,
+            backgroundColor: Colors.black45,
+            colorText: Colors.white,
+          );
+        },
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        e.toString(),
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  Future<void> deleteProject({
+    required context,
+    required String projectId,
+  }) async {
+    try {
+      var userProvider = Provider.of<UserProvider>(context, listen: false);
+
+      if (userProvider.user.role != 'admin') {
+        Get.snackbar(
+          'Error',
+          'Only Admins can delete projects',
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+        return;
+      }
+
+      http.Response res = await http.delete(
+        Uri.parse('${Constants.uri}/api/posts/$projectId'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'x-auth-token': userProvider.user.accessToken,
+        },
+      );
+
+      httpErrorHandle(
+        response: res,
+        context: context,
+        onSuccess: () {
+          Get.snackbar(
+            "Success",
+            "Project deleted successfully",
+            snackPosition: SnackPosition.TOP,
+            backgroundColor: Colors.black45,
+            colorText: Colors.white,
+          );
+        },
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        e.toString(),
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  Future<void> updateProject({
+    required context,
+    required String projectId,
+    required String title,
+    required String downloadUrl,
+    required String imageUrls,
+  }) async {
+    try {
+      var userProvider = Provider.of<UserProvider>(context, listen: false);
+
+      if (userProvider.user.role != 'admin') {
+        Get.snackbar(
+          'Error',
+          'Only Admins can update projects',
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+        return;
+      }
+
+      if (imageUrls.isEmpty) {
+        throw Exception('Please provide at least one image URL');
+      }
+
+      final response = await http.put(
+        Uri.parse('${Constants.uri}/api/posts/$projectId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'x-auth-token': userProvider.user.accessToken,
+        },
+        body: jsonEncode({
+          'title': title,
+          'downloadUrl': downloadUrl,
+          'imageUrls': imageUrls,
+        }),
+      );
+
+
+      httpErrorHandle(
+        response: response,
+        context: context,
+        onSuccess: () {
+          Get.snackbar(
+            "Success",
+            "Project Updated successfully",
             snackPosition: SnackPosition.TOP,
             backgroundColor: Colors.black45,
             colorText: Colors.white,
@@ -90,14 +188,6 @@ class UploadService {
     try {
       var userProvider = Provider.of<UserProvider>(context, listen: false);
 
-      if (userProvider.user.role != 'admin') {
-        Get.snackbar('Error', 'You are not admin',
-            snackPosition: SnackPosition.TOP,
-            backgroundColor: Colors.red,
-            colorText: Colors.white);
-        return [];
-      }
-
       http.Response res = await http.get(
         Uri.parse('${Constants.uri}/api/posts'),
         headers: <String, String>{
@@ -115,6 +205,39 @@ class UploadService {
         throw Exception('Failed to load projects');
       }
     } catch (e) {
+      rethrow;
+    }
+  }
+
+
+  Future<Map<String, dynamic>> getProjectDetails({
+    required context,
+    required String projectId,
+  }) async {
+    try {
+      var userProvider = Provider.of<UserProvider>(context, listen: false);
+
+      http.Response res = await http.get(
+        Uri.parse('${Constants.uri}/api/posts/$projectId'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'x-auth-token': userProvider.user.accessToken,
+        },
+      );
+
+      if (res.statusCode == 200) {
+        return jsonDecode(res.body)['data'];
+      } else {
+        throw Exception('Failed to load project details');
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        e.toString(),
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
       rethrow;
     }
   }

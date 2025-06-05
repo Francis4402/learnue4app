@@ -51,6 +51,7 @@ class _MessageState extends State<Message> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Messages'),
+        centerTitle: true,
       ),
       body: !isLoggedIn
           ? const Center(

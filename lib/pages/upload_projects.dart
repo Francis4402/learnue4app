@@ -1,6 +1,4 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:learnue4app/pages/dashboard.dart';
 import 'package:learnue4app/services/upload_project_services.dart';
 import 'package:get/get.dart';
@@ -16,34 +14,22 @@ class _UploadProjectsState extends State<UploadProjects> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController titleController = TextEditingController();
   final TextEditingController projectUrlController = TextEditingController();
+  final TextEditingController uploadImageUrlController = TextEditingController();
+
   final UploadService uploadService = UploadService();
-  File? _selectedImage;
 
-  Future<void> _pickImage() async {
-    final pickedFile = await ImagePicker().pickImage(
-      source: ImageSource.gallery,
-      maxWidth: 800,
-      maxHeight: 800,
-      imageQuality: 85,
-    );
 
-    if (pickedFile != null) {
-      setState(() {
-        _selectedImage = File(pickedFile.path);
-      });
-    }
-  }
-
-  void _uploadProject() {
+  void _uploadProject() async {
     if (_formKey.currentState!.validate()) {
       String title = titleController.text.trim();
       String url = projectUrlController.text.trim();
+      String imageUrl = uploadImageUrlController.text.trim();
 
-      uploadService.uploadProject(
+      await uploadService.uploadProject(
         context: context,
         title: title,
-        downloadUrl: url,
-        images: _selectedImage!,
+        downloadUrl: url, imageUrls: imageUrl,
+
       ).then((_) {
         _clearForm();
         Get.off(() => const Dashboard());
@@ -54,10 +40,7 @@ class _UploadProjectsState extends State<UploadProjects> {
   void _clearForm() {
     titleController.clear();
     projectUrlController.clear();
-
-    setState(() {
-      _selectedImage = null;
-    });
+    uploadImageUrlController.clear();
 
     _formKey.currentState?.reset();
   }
@@ -123,54 +106,31 @@ class _UploadProjectsState extends State<UploadProjects> {
 
                 const SizedBox(height: 20),
 
-                // Image Picker Field
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Project Image',
-                      style: TextStyle(color: Colors.white70, fontSize: 16),
+                TextFormField(
+                  controller: uploadImageUrlController,
+                  decoration: InputDecoration(
+                    labelText: 'Image Url',
+                    labelStyle: const TextStyle(color: Colors.white70),
+                    filled: true,
+                    fillColor: Colors.white.withOpacity(0.1),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide.none,
                     ),
-                    const SizedBox(height: 8),
-                    GestureDetector(
-                      onTap: _pickImage,
-                      child: Container(
-                        height: 150,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.3),
-                            width: 1,
-                          ),
-                        ),
-                        child: _selectedImage == null
-                            ? const Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.add_a_photo,
-                                      color: Colors.white70, size: 40),
-                                  SizedBox(height: 8),
-                                  Text('Tap to select image',
-                                      style: TextStyle(color: Colors.white70)),
-                                ],
-                              )
-                            : ClipRRect(
-                                borderRadius: BorderRadius.circular(10),
-                                child: Image.file(
-                                  _selectedImage!,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                      ),
-                    ),
-                  ],
+                    prefixIcon: const Icon(Icons.link, color: Colors.white70),
+                  ),
+                  style: const TextStyle(color: Colors.white),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter project URL';
+                    }
+                    return null;
+                  },
                 ),
 
                 const SizedBox(height: 30),
 
-                // Submit Button
+
                 ElevatedButton(
                   onPressed: () {
                     _uploadProject();
@@ -192,6 +152,12 @@ class _UploadProjectsState extends State<UploadProjects> {
     );
   }
 
-
+  @override
+  void dispose() {
+    titleController.dispose();
+    projectUrlController.dispose();
+    uploadImageUrlController.dispose();
+    super.dispose();
+  }
 
 }

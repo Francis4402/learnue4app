@@ -2,7 +2,7 @@ class UploadModel {
   String? id;
   String? title;
   String? downloadUrl;
-  List<String>? images;
+  String? imageUrls;
   String? createdAt;
   String? updatedAt;
 
@@ -10,7 +10,7 @@ class UploadModel {
     this.id,
     this.title,
     this.downloadUrl,
-    this.images,
+    this.imageUrls,
     this.createdAt,
     this.updatedAt,
   });
@@ -19,7 +19,7 @@ class UploadModel {
     id = json['_id'];
     title = json['title'];
     downloadUrl = json['downloadUrl'];
-    images = json['images'] != null ? List<String>.from(json['images']) : null;
+    imageUrls = json['imageUrls'];
     createdAt = json['createdAt'];
     updatedAt = json['updatedAt'];
   }
@@ -29,7 +29,7 @@ class UploadModel {
     data['_id'] = id;
     data['title'] = title;
     data['downloadUrl'] = downloadUrl;
-    data['images'] = images;
+    data['imageUrls'] = imageUrls;
     data['createdAt'] = createdAt;
     data['updatedAt'] = updatedAt;
     return data;

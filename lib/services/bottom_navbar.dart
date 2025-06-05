@@ -6,6 +6,7 @@ import 'package:learnue4app/auth/registerpage.dart';
 import 'package:learnue4app/controller/bottom_navbar_controller.dart';
 import 'package:learnue4app/pages/dashboard.dart';
 import 'package:learnue4app/pages/message.dart';
+import 'package:learnue4app/pages/project_files_review.dart';
 import 'package:learnue4app/services/auth_services.dart';
 import 'package:learnue4app/utils/app_colors.dart';
 import 'package:learnue4app/utils/user_provider.dart';
@@ -47,6 +48,7 @@ class _MainBottomNavbarScreenState extends State<MainBottomNavbarScreen> {
 
     final userProvider = Provider.of<UserProvider>(context);
     final isLoggedIn = userProvider.user.accessToken.isNotEmpty;
+
 
     return Scaffold(
       key: _scaffoldKey,
@@ -105,12 +107,24 @@ class _MainBottomNavbarScreenState extends State<MainBottomNavbarScreen> {
                         ),
                       ],
                       if (isLoggedIn) ...[
+                        if (userProvider.user.role == 'admin')
+                          ListTile(
+                            leading: const Icon(Icons.person),
+                            title: const Text('Dashboard'),
+                            onTap: () {
+                              Get.offAll(
+                                const Dashboard(),
+                                transition: Transition.circularReveal,
+                                duration: const Duration(milliseconds: 1000),
+                              );
+                            },
+                          ),
                         ListTile(
                           leading: const Icon(Icons.person),
-                          title: const Text('Dashboard'),
+                          title: const Text('Project Files'),
                           onTap: () {
                             Get.to(
-                              const Dashboard(),
+                              const ProjectFilesReview(),
                               transition: Transition.circularReveal,
                               duration: const Duration(milliseconds: 1000),
                             );
