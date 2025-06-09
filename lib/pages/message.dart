@@ -25,15 +25,15 @@ class _MessageState extends State<Message> {
   void loadUsers() async {
     final authService = AuthService();
     final userProvider = Provider.of<UserProvider>(context, listen: false);
-
     final fetchedUsers = await authService.getUserData(context);
 
     final filtered = fetchedUsers.where((user) {
       if (user['email'] == userProvider.user.email) return false;
-
       if (userProvider.user.role == 'admin') return true;
-
       return user['role'] == 'admin';
+    }).map((user) {
+      user['hasUnread'] = user['hasUnread'] ?? false;
+      return user;
     }).toList();
 
     setState(() {
@@ -55,22 +55,18 @@ class _MessageState extends State<Message> {
       ),
       body: !isLoggedIn
           ? const Center(
-              child: Text(
-                "You're not logged in",
-                style: TextStyle(fontSize: 18),
-              ),
-            )
+        child: Text(
+          "You're not logged in",
+          style: TextStyle(fontSize: 18),
+        ),
+      )
           : isLoading
-              ? const Center(
-                  child: CircularProgressIndicator(),
-                )
-              : users.isEmpty
-                  ? const Center(
-                      child: Text("No users found"),
-                    )
-                  : isAdmin
-                      ? _buildAdminListView(userProvider.user)
-                      : _buildUserListView(userProvider.user),
+          ? const Center(child: CircularProgressIndicator())
+          : users.isEmpty
+          ? const Center(child: Text("No users found"))
+          : isAdmin
+          ? _buildAdminListView(userProvider.user)
+          : _buildUserListView(userProvider.user),
     );
   }
 
@@ -80,16 +76,38 @@ class _MessageState extends State<Message> {
       itemBuilder: (context, index) {
         final user = users[index];
         return ListTile(
-          leading: const CircleAvatar(
-            child: Icon(Icons.person),
+          leading: Stack(
+            children: [
+              const CircleAvatar(
+                child: Icon(Icons.person),
+              ),
+              if (user['hasUnread'] == true)
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.priority_high,
+                      size: 14,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+            ],
           ),
           title: Text(user['name'] ?? 'No Name'),
           subtitle: Text(user['email'] ?? 'No Email'),
           trailing: const Icon(Icons.message, color: Colors.blue),
           onTap: () {
             Get.to(() => ChatScreen(
-                currentUser: currentUser,
-                otherUser: user));
+              currentUser: currentUser,
+              otherUser: user,
+            ));
           },
         );
       },
@@ -121,7 +139,6 @@ class _MessageState extends State<Message> {
             ),
             child: Column(
               children: [
-
                 Stack(
                   alignment: Alignment.center,
                   children: [
@@ -241,13 +258,16 @@ class _MessageState extends State<Message> {
                           ),
                         ),
                       ),
-
                       const SizedBox(height: 16),
 
                       // Message Button
                       ElevatedButton.icon(
-                        icon: const Icon(Icons.message, size: 18, color: Colors.white,),
-                        label: const Text('Send Message', style: TextStyle(color: Colors.white),),
+                        icon: const Icon(Icons.message,
+                            size: 18, color: Colors.white),
+                        label: const Text(
+                          'Send Message',
+                          style: TextStyle(color: Colors.white),
+                        ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blue[400],
                           shape: RoundedRectangleBorder(
@@ -271,27 +291,6 @@ class _MessageState extends State<Message> {
           ),
         );
       },
-    );
-  }
-
-  Widget _buildProfileStat(String label, int count) {
-    return Column(
-      children: [
-        Text(
-          count.toString(),
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey[600],
-          ),
-        ),
-      ],
     );
   }
 

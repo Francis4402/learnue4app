@@ -133,6 +133,19 @@ class AuthService {
     }
   }
 
+
+  Future<int> fetchUnreadMessagesCount(String userId) async {
+    final response = await http.get(Uri.parse('${Constants.uri}/api/messages/unreadCount/$userId'));
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['unreadCount'];
+    } else {
+      throw Exception('Failed to load unread messages count');
+    }
+  }
+
+
   // get user data
   Future<List<dynamic>> getUserData(BuildContext context) async {
     try {
