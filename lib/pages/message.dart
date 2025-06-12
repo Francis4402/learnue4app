@@ -16,6 +16,7 @@ class _MessageState extends State<Message> {
   List<dynamic> users = [];
   bool isLoading = true;
 
+
   @override
   void initState() {
     super.initState();
@@ -27,20 +28,29 @@ class _MessageState extends State<Message> {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final fetchedUsers = await authService.getUserData(context);
 
-    final filtered = fetchedUsers.where((user) {
-      if (user['email'] == userProvider.user.email) return false;
-      if (userProvider.user.role == 'admin') return true;
-      return user['role'] == 'admin';
-    }).map((user) {
-      user['hasUnread'] = user['hasUnread'] ?? false;
-      return user;
-    }).toList();
+    List<dynamic> updatedUsers = [];
+
+    for (var user in fetchedUsers) {
+      if (user['email'] == userProvider.user.email) continue;
+
+      if (userProvider.user.role == 'admin' || user['role'] == 'admin') {
+        // Call hasUnread API
+        final hasUnread = await authService.hasUnread(
+          receiverId: userProvider.user.id.toString(),
+          senderId: user['_id'],
+        );
+
+        user['hasUnread'] = hasUnread;
+        updatedUsers.add(user);
+      }
+    }
 
     setState(() {
-      users = filtered;
+      users = updatedUsers;
       isLoading = false;
     });
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -78,9 +88,7 @@ class _MessageState extends State<Message> {
         return ListTile(
           leading: Stack(
             children: [
-              const CircleAvatar(
-                child: Icon(Icons.person),
-              ),
+              const CircleAvatar(child: Icon(Icons.person)),
               if (user['hasUnread'] == true)
                 Positioned(
                   top: 0,
@@ -120,6 +128,7 @@ class _MessageState extends State<Message> {
       itemBuilder: (context, index) {
         final user = users[index];
         final isOnline = user['isOnline'] ?? true;
+        final hasUnread = user['hasUnread'] == true;
 
         return Center(
           child: Container(
@@ -148,7 +157,8 @@ class _MessageState extends State<Message> {
                         height: 120,
                         decoration: const BoxDecoration(
                           borderRadius: BorderRadius.vertical(
-                              top: Radius.circular(20)),
+                            top: Radius.circular(20),
+                          ),
                           color: Colors.white24,
                         ),
                       ),
@@ -162,10 +172,7 @@ class _MessageState extends State<Message> {
                             height: 100,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              border: Border.all(
-                                color: Colors.white,
-                                width: 4,
-                              ),
+                              border: Border.all(color: Colors.white, width: 4),
                               boxShadow: [
                                 BoxShadow(
                                   color: Colors.grey.withOpacity(0.3),
@@ -192,7 +199,6 @@ class _MessageState extends State<Message> {
                               ),
                             ),
                           ),
-                          // Online Status Indicator
                           Positioned(
                             bottom: 6,
                             right: 6,
@@ -202,20 +208,33 @@ class _MessageState extends State<Message> {
                               decoration: BoxDecoration(
                                 color: isOnline ? Colors.green : Colors.grey,
                                 shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.white,
-                                  width: 2,
-                                ),
+                                border: Border.all(color: Colors.white, width: 2),
                               ),
                             ),
                           ),
+                          if (hasUnread)
+                            Positioned(
+                              top: 0,
+                              right: 0,
+                              child: Container(
+                                width: 20,
+                                height: 20,
+                                decoration: const BoxDecoration(
+                                  color: Colors.red,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.mail,
+                                  size: 14,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
                         ],
                       ),
                     ),
                   ],
                 ),
-
-                // User Info Section
                 Padding(
                   padding: const EdgeInsets.all(20),
                   child: Column(
@@ -236,8 +255,6 @@ class _MessageState extends State<Message> {
                         ),
                       ),
                       const SizedBox(height: 12),
-
-                      // Role Badge
                       Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 6),
@@ -259,8 +276,6 @@ class _MessageState extends State<Message> {
                         ),
                       ),
                       const SizedBox(height: 16),
-
-                      // Message Button
                       ElevatedButton.icon(
                         icon: const Icon(Icons.message,
                             size: 18, color: Colors.white),

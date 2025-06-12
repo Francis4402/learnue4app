@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:learnue4app/pages/forgot_password.dart';
 import 'package:learnue4app/services/auth_services.dart';
+import 'package:get/get.dart';
 
 
 class LoginPage extends StatefulWidget {
@@ -22,6 +24,13 @@ class _LoginPageState extends State<LoginPage> {
           email: emailController.text.trim(),
           password: passwordController.text.trim());
     }
+  }
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
   }
 
 
@@ -61,9 +70,9 @@ class _LoginPageState extends State<LoginPage> {
                       return null;
                     },
                   ),
-        
+
                   const SizedBox(height: 20),
-        
+
                   TextFormField(
                     controller: passwordController,
                     decoration: InputDecoration(
@@ -89,9 +98,16 @@ class _LoginPageState extends State<LoginPage> {
                       return null;
                     },
                   ),
-        
-                  const SizedBox(height: 30),
-        
+
+                  const SizedBox(height: 10),
+
+                  ElevatedButton(onPressed: () {
+                    Get.to(const ForgotPasswordPage(), transition: Transition.circularReveal, duration: const Duration(milliseconds: 1000));
+                  }, style: ElevatedButton.styleFrom(backgroundColor: Colors.black26, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5))), child: const Text('Forgot Password')),
+
+                  const SizedBox(height: 20),
+
+
                   ElevatedButton(
                     onPressed: loginUser,
                     style: ElevatedButton.styleFrom(
@@ -106,61 +122,6 @@ class _LoginPageState extends State<LoginPage> {
                       style: TextStyle(color: Colors.blueAccent, fontSize: 16),
                     ),
                   ),
-        
-                  const SizedBox(height: 20),
-        
-                  // Row(
-                  //   children: [
-                  //     Expanded(
-                  //         child: Divider(
-                  //           color: Colors.white.withOpacity(0.3),
-                  //           thickness: 1,
-                  //         )),
-                  //     const Padding(
-                  //       padding: EdgeInsets.symmetric(horizontal: 10),
-                  //       child: Text(
-                  //         'OR',
-                  //         style: TextStyle(color: Colors.white70),
-                  //       ),
-                  //     ),
-                  //     Expanded(
-                  //       child: Divider(
-                  //         color: Colors.white.withOpacity(0.3),
-                  //         thickness: 1,
-                  //       ),
-                  //     ),
-                  //   ],
-                  // ),
-
-        
-                  // OutlinedButton(
-                  //   onPressed: () {},
-                  //   style: OutlinedButton.styleFrom(
-                  //       backgroundColor: Colors.white.withOpacity(0.1),
-                  //       padding: const EdgeInsets.symmetric(
-                  //           horizontal: 40, vertical: 15),
-                  //       side: BorderSide(color: Colors.white.withOpacity(0.3)),
-                  //       shape: RoundedRectangleBorder(
-                  //           borderRadius: BorderRadius.circular(10))),
-                  //   child: Row(
-                  //     mainAxisSize: MainAxisSize.min,
-                  //     children: [
-                  //       Image.asset(
-                  //         'assets/googleicon.png',
-                  //         height: 22,
-                  //         width: 22,
-                  //       ),
-                  //       const SizedBox(
-                  //         width: 10,
-                  //       ),
-                  //       const Text(
-                  //         'Sign in with Google',
-                  //         style: TextStyle(color: Colors.white, fontSize: 16),
-                  //       )
-                  //     ],
-                  //   ),
-                  // ),
-        
                 ],
               ),
             ),

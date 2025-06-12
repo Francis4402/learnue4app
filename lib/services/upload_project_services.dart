@@ -4,7 +4,6 @@ import 'package:learnue4app/utils/key.dart';
 import 'package:learnue4app/utils/user_provider.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
-import 'package:learnue4app/utils/utils.dart';
 import 'package:provider/provider.dart';
 
 class UploadService {
@@ -46,24 +45,21 @@ class UploadService {
         }),
       );
 
-
-      httpErrorHandle(
-        response: response,
-        context: context,
-        onSuccess: () {
-          Get.snackbar(
-            "Success",
-            "Project Uploaded successfully",
-            snackPosition: SnackPosition.TOP,
-            backgroundColor: Colors.black45,
-            colorText: Colors.white,
-          );
-        },
-      );
+      if (response.statusCode == 200) {
+        Get.snackbar(
+          "Success",
+          "Project Uploaded successfully",
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.black45,
+          colorText: Colors.white,
+        );
+      } else {
+        throw Exception('Failed to Upload Project');
+      }
     } catch (e) {
       Get.snackbar(
         'Error',
-        e.toString(),
+        'Error Uploading Project',
         snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
@@ -97,23 +93,23 @@ class UploadService {
         },
       );
 
-      httpErrorHandle(
-        response: res,
-        context: context,
-        onSuccess: () {
-          Get.snackbar(
-            "Success",
-            "Project deleted successfully",
-            snackPosition: SnackPosition.TOP,
-            backgroundColor: Colors.black45,
-            colorText: Colors.white,
-          );
-        },
-      );
+
+      if (res.statusCode == 200) {
+        Get.snackbar(
+          "Success",
+          "Project deleted successfully",
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.black45,
+          colorText: Colors.white,
+        );
+      } else {
+        throw Exception('Failed to delete');
+      }
+
     } catch (e) {
       Get.snackbar(
         'Error',
-        e.toString(),
+        'Error Deleting Project',
         snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
@@ -159,24 +155,21 @@ class UploadService {
         }),
       );
 
-
-      httpErrorHandle(
-        response: response,
-        context: context,
-        onSuccess: () {
-          Get.snackbar(
-            "Success",
-            "Project Updated successfully",
-            snackPosition: SnackPosition.TOP,
-            backgroundColor: Colors.black45,
-            colorText: Colors.white,
-          );
-        },
-      );
+      if(response.statusCode == 200) {
+        Get.snackbar(
+          "Success",
+          "Project Updated successfully",
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.black45,
+          colorText: Colors.white,
+        );
+      } else {
+        throw Exception('Failed to Update Project');
+      }
     } catch (e) {
       Get.snackbar(
         'Error',
-        e.toString(),
+        'Error Updating Project',
         snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
@@ -195,8 +188,6 @@ class UploadService {
           'x-auth-token': userProvider.user.accessToken,
         },
       );
-
-      print(res);
 
       if (res.statusCode == 200) {
         final List<dynamic> data = jsonDecode(res.body)['data'];
