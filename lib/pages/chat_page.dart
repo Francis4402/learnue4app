@@ -34,57 +34,63 @@ class _ChatScreenState extends State<ChatScreen> {
 
   final List<Map<String, dynamic>> messages = [];
   late ChatSocketService socketService;
+  late bool _isLoading = true;
+  String? _currentRoomId;
 
   @override
   void initState() {
     super.initState();
     socketService = ChatSocketService();
+    _initializeChat();
+  }
 
-    socketService.connectSocket(
-      widget.currentUser.id!,
-      (data) {
-        setState(() {
-          messages.add(data);
-        });
-      },
-      userId: widget.currentUser.id!,
-      otherUserId: widget.otherUser['_id'],
-      onMessageReceived: (data) {
-        setState(() {
-          messages.add(data);
-        });
-      },
-      onMessageDeleted: (String messageId) {
-        setState(() {
-          messages.removeWhere((m) => m['_id'] == messageId);
-        });
-      },
-    );
-
-    // Load old chat messages
-    loadMessages();
-
-    // Join room
-    final roomId = socketService.generateRoomId(
+  Future<void> _initializeChat() async {
+    _currentRoomId = socketService.generateRoomId(
       widget.currentUser.id!,
       widget.otherUser['_id'],
     );
-    socketService.socket.emit('joinRoom', roomId);
+
+
+    socketService.connectSocket(
+      widget.currentUser.id!,
+          (data) {},
+      userId: widget.currentUser.id!,
+      otherUserId: widget.otherUser['_id'],
+      onMessageReceived: _handleNewMessage,
+      onMessageDeleted: _handleMessageDeleted,
+    );
+
+
+    await loadMessages();
+    setState(() => _isLoading = false);
   }
 
-  @override
-  void dispose() {
-    socketService.disconnect();
-    _messageController.dispose();
-    _scrollController.dispose();
-    super.dispose();
+  void _handleNewMessage(dynamic data) {
+
+    if (!messages.any((m) => m['_id'] == data['_id'])) {
+      setState(() {
+        messages.add(data);
+        _scrollToBottom();
+      });
+    }
   }
 
-  void scrollToBottom() {
+  void _handleMessageDeleted(String messageId) {
+    setState(() {
+      messages.removeWhere((m) => m['_id'] == messageId);
+    });
+  }
+
+
+
+  void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
-        _scrollController.animateTo(_scrollController.position.maxScrollExtent,
-            duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
       }
     });
   }
@@ -124,19 +130,23 @@ class _ChatScreenState extends State<ChatScreen> {
 
 
   Future<void> loadMessages() async {
-    final user1 = widget.currentUser.id;
-    final user2 = widget.otherUser['_id'];
+    try {
+      final user1 = widget.currentUser.id;
+      final user2 = widget.otherUser['_id'];
+      final url = Uri.parse('${Constants.uri}/api/messages/$user1/$user2');
+      final response = await http.get(url);
 
-    final url = Uri.parse('${Constants.uri}/api/messages/$user1/$user2');
-    final response = await http.get(url);
-
-    if (response.statusCode == 200) {
-      final List decoded = jsonDecode(response.body);
-      setState(() {
-        messages.addAll(decoded.cast<Map<String, dynamic>>());
-      });
-    } else {
-      print('⚠️ Failed to load messages: ${response.body}');
+      if (response.statusCode == 200) {
+        final List decoded = jsonDecode(response.body);
+        setState(() {
+          messages.addAll(decoded.cast<Map<String, dynamic>>());
+          _scrollToBottom();
+        });
+      } else {
+        print('⚠️ Failed to load messages: ${response.body}');
+      }
+    } catch (e) {
+      print('📡 Error loading messages: $e');
     }
   }
 
@@ -144,19 +154,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final text = _messageController.text.trim();
     if (text.isEmpty) return;
 
-    final newMessage = {
-      'senderId': widget.currentUser.id,
-      'receiverId': widget.otherUser['_id'],
-      'message': text,
-      'createdAt': DateTime.now().toIso8601String(),
-    };
-
-    setState(() {
-      messages.add(newMessage);
-    });
-    scrollToBottom();
-
-    // Emit message via socket
+    // Don't add message locally - wait for server response via socket
     socketService.sendMessage(
       senderId: widget.currentUser.id!,
       receiverId: widget.otherUser['_id'],
@@ -184,7 +182,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
       setState(() {
         messages.add(newMessage);
-        scrollToBottom();
+        _scrollToBottom();
       });
 
       socketService.sendMessage(
@@ -212,7 +210,7 @@ class _ChatScreenState extends State<ChatScreen> {
       };
 
       setState(() => messages.add(newMessage));
-      scrollToBottom();
+      _scrollToBottom();
 
       socketService.sendMessage(
         senderId: widget.currentUser.id!,
@@ -250,7 +248,7 @@ class _ChatScreenState extends State<ChatScreen> {
             GestureDetector(
               onTap: () => _downloadFile(
                 bytes: bytes,
-                fileName: 'image_${DateTime.now().millisecondsSinceEpoch}.jpg',
+                fileName: 'image_${DateTime.now().millisecondsSinceEpoch}',
               ),
               child: Image.memory(bytes, width: 200),
             ),
@@ -307,9 +305,52 @@ class _ChatScreenState extends State<ChatScreen> {
     return content;
   }
 
+  Future<void> _confirmDeleteMessage(String? messageId) async {
+    if (messageId == null || messageId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Cannot delete message - invalid ID')));
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Message?'),
+        content: const Text('This will permanently remove the message'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      setState(() {
+        messages.removeWhere((m) => m['_id'] == messageId);
+      });
+
+      socketService.deleteMessage(
+        messageId,
+        _currentRoomId!,
+        widget.currentUser.id!,
+      );
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
+
+    if(_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text("Chat with ${widget.otherUser['name']}"),
@@ -328,54 +369,8 @@ class _ChatScreenState extends State<ChatScreen> {
                 return GestureDetector(
 
                   onLongPress: isMe
-                      ? () async {
-                          final messageId = msg['_id']?.toString();
-                          if (messageId == null || messageId.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                                content: Text(
-                                    'Cannot delete message - invalid ID')));
-                            return;
-                          }
+                      ? () => _confirmDeleteMessage(msg['_id']) : null,
 
-                          final confirmed = await showDialog<bool>(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: const Text('Delete Message?'),
-                              content: const Text(
-                                  'This will permanently remove the message'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () =>
-                                      Navigator.pop(context, false),
-                                  child: const Text('Cancel'),
-                                ),
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context, true),
-                                  child: const Text('Delete',
-                                      style: TextStyle(color: Colors.red)),
-                                )
-                              ],
-                            ),
-                          );
-
-                          if (confirmed == true) {
-                            final roomId = socketService.generateRoomId(
-                              widget.currentUser.id!,
-                              widget.otherUser['_id'],
-                            );
-
-                            // Optimistic UI update
-                            setState(() {
-                              messages
-                                  .removeWhere((m) => m['_id'] == messageId);
-                            });
-
-                            // Send deletion request
-                            socketService.deleteMessage(
-                                messageId, roomId, widget.currentUser.id!);
-                          }
-                        }
-                      : null,
                   child: Align(
                     alignment:
                         isMe ? Alignment.centerRight : Alignment.centerLeft,
@@ -434,5 +429,13 @@ class _ChatScreenState extends State<ChatScreen> {
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    socketService.disconnect();
+    _messageController.dispose();
+    _scrollController.dispose();
+    super.dispose();
   }
 }
