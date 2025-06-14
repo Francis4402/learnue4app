@@ -88,7 +88,7 @@ class _MessageState extends State<Message> {
         return ListTile(
           leading: Stack(
             children: [
-              const CircleAvatar(child: Icon(Icons.person)),
+              const CircleAvatar(radius: 25,child: Icon(Icons.person)),
               if (user['hasUnread'] == true)
                 Positioned(
                   top: 0,
@@ -137,12 +137,12 @@ class _MessageState extends State<Message> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
               color: Colors.black,
-              boxShadow: [
+              boxShadow: const [
                 BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
-                  spreadRadius: 2,
+                  color: Colors.black87,
+                  spreadRadius: 1,
                   blurRadius: 10,
-                  offset: const Offset(0, 4),
+                  offset: Offset(0, 4),
                 ),
               ],
             ),
@@ -173,9 +173,9 @@ class _MessageState extends State<Message> {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               border: Border.all(color: Colors.white, width: 4),
-                              boxShadow: [
+                              boxShadow: const [
                                 BoxShadow(
-                                  color: Colors.grey.withOpacity(0.3),
+                                  color: Colors.blueGrey,
                                   spreadRadius: 2,
                                   blurRadius: 8,
                                 ),
@@ -259,7 +259,7 @@ class _MessageState extends State<Message> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: _getRoleColor(user['role']).withOpacity(0.1),
+                          color: _getRoleColor(user['role']),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                             color: _getRoleColor(user['role']),
@@ -268,8 +268,8 @@ class _MessageState extends State<Message> {
                         ),
                         child: Text(
                           user['role']?.toUpperCase() ?? 'USER',
-                          style: TextStyle(
-                            color: _getRoleColor(user['role']),
+                          style: const TextStyle(
+                            color: Colors.white,
                             fontWeight: FontWeight.bold,
                             fontSize: 12,
                           ),
