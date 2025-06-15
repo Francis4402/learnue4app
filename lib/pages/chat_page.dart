@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:learnue4app/models/messages_model.dart';
 import 'package:learnue4app/models/user_model.dart';
 import 'package:learnue4app/utils/key.dart';
+import 'package:learnue4app/utils/message_bubble.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 class ChatScreen extends StatefulWidget {
@@ -18,26 +20,45 @@ class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   late IO.Socket socket;
   late bool sendButton = false;
+  List<ChatMessage> messages = [];
 
   void connect() {
     socket = IO.io(Constants.uri, <String, dynamic>{
       'transports': ['websocket'],
       'autoConnect': false,
     });
+
     socket.connect();
-    socket.onConnect((data) => print("Connected"));
+    socket.emit('joinRoom', widget.currentUser.id);
+    socket.onConnect((msg) {
+
+    });
   }
 
-  void sendMessage(String message, int senderId, int receiverId) {
+  void sendMessage(String message, String senderId, String receiverId) {  // Changed to String
     socket.emit("message", {
-      "message": message, "senderId": senderId, "reciverId": receiverId
+      "message": message, "senderId": senderId, "receiverId": receiverId
+    });
+  }
+
+  void setMessage(String id, String roomId, String message, String senderId, String receiverId, bool isRead, DateTime timestamp) {
+    ChatMessage messageModel = ChatMessage(id: id, roomId: roomId, senderId: senderId, receiverId: receiverId, isRead: isRead, timestamp: timestamp);
+    setState(() {
+      messages.add(messageModel);
     });
   }
 
   @override
   void initState() {
-    connect();
     super.initState();
+    connect();
+  }
+
+  @override
+  void dispose() {
+    socket.disconnect();
+    _messageController.dispose();
+    super.dispose();
   }
 
   @override
@@ -65,7 +86,18 @@ class _ChatScreenState extends State<ChatScreen> {
         width: MediaQuery.of(context).size.width,
         child: Stack(
           children: [
-            ListView(),
+            ListView.builder(
+              itemCount: messages.length,
+              reverse: true,
+              padding: const EdgeInsets.only(top: 10, bottom: 70),
+              itemBuilder: (context, index) {
+                final message = messages[index];
+                return MessageBubble(
+                  text: message['text'],
+                  isMe: message['isMe'],
+                );
+              },
+            ),
             Align(
               alignment: Alignment.bottomCenter,
               child: Row(
@@ -75,7 +107,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     width: MediaQuery.of(context).size.width - 60,
                     child: Card(
                       margin:
-                          const EdgeInsets.only(left: 2, right: 2, bottom: 8),
+                      const EdgeInsets.only(left: 2, right: 2, bottom: 8),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(25)),
                       child: TextFormField(
@@ -85,15 +117,9 @@ class _ChatScreenState extends State<ChatScreen> {
                         maxLines: 5,
                         minLines: 1,
                         onChanged: (value) {
-                          if(value.isNotEmpty) {
-                            setState(() {
-                              sendButton = true;
-                            });
-                          } else {
-                            setState(() {
-                              sendButton = false;
-                            });
-                          }
+                          setState(() {
+                            sendButton = value.isNotEmpty;
+                          });
                         },
                         decoration: InputDecoration(
                             hintText: "Type a message",
@@ -101,7 +127,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             suffixIcon: IconButton(
                                 onPressed: () {
                                   showModalBottomSheet(
-                                    backgroundColor: Colors.transparent,
+                                      backgroundColor: Colors.transparent,
                                       context: context,
                                       builder: (builder) => bottomSheet());
                                 },
@@ -113,15 +139,19 @@ class _ChatScreenState extends State<ChatScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(
-                    width: 4,
-                  ),
+                  const SizedBox(width: 4),
                   Padding(
                     padding: const EdgeInsets.only(bottom: 8),
                     child: CircleAvatar(
                       child: IconButton(
                         onPressed: () {
-
+                          if (sendButton) {
+                            sendMessage(
+                              _messageController.text.trim(),
+                              widget.currentUser.id!,
+                              widget.otherUser['_id'].toString(),
+                            );
+                          }
                         },
                         icon: const Icon(
                           Icons.send,
@@ -152,13 +182,13 @@ class _ChatScreenState extends State<ChatScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Column(
-                  children: [
-                    CircleAvatar(
-                      child: Icon(Icons.insert_drive_file),
-                    ),
-                    SizedBox(height: 5),
-                    Text('File', style: TextStyle(fontSize: 14),)
-                  ],
+                children: [
+                  CircleAvatar(
+                    child: Icon(Icons.insert_drive_file),
+                  ),
+                  SizedBox(height: 5),
+                  Text('File', style: TextStyle(fontSize: 14),)
+                ],
               ),
               SizedBox(width: 40),
               Column(
@@ -175,11 +205,5 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _messageController.dispose();
-    super.dispose();
   }
 }

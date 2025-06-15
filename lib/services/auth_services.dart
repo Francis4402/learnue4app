@@ -303,7 +303,7 @@ class AuthService {
             snackPosition: SnackPosition.TOP,
             backgroundColor: Colors.green,
             colorText: Colors.white);
-        Get.to(() => const LoginPage());
+        Get.offAll(() => const LoginPage());
       } else {
         throw Exception(responseData['message'] ?? 'Failed to reset password');
       }
